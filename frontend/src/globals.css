@@ -1,0 +1,189 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /**
+   * DocuLens theme - Tax document analysis focused design
+   */
+  :root {
+    --background: 240 6% 97%;
+    --foreground: 240 10% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 15%;
+
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 262 40% 95%;
+    --secondary-foreground: 262 83% 25%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    --accent: 262 40% 95%;
+    --accent-foreground: 262 83% 25%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 262 83% 58%;
+
+    --radius: 1rem;
+  }
+
+  .dark {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 95%;
+
+    --card: 240 10% 4%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 240 10% 4%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 240 4% 16%;
+    --accent-foreground: 0 0% 95%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 262 83% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+      Arial, sans-serif;
+  }
+
+  /* Custom scrollbar for better UX */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-md;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+}
+
+@layer components {
+  /* DocuLens specific component styles */
+  .upload-area {
+    @apply border-2 border-dashed border-primary/30 bg-primary/5 rounded-xl p-8 text-center transition-all duration-200 hover:border-primary/50 hover:bg-primary/10;
+  }
+
+  .upload-area.drag-over {
+    @apply border-primary bg-primary/20;
+  }
+
+  .document-viewer {
+    @apply bg-white border rounded-lg shadow-sm overflow-hidden;
+  }
+
+  .annotation-highlight {
+    @apply cursor-pointer transition-opacity duration-200;
+  }
+
+  .annotation-highlight:hover {
+    @apply opacity-80;
+  }
+
+  .issue-badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .issue-badge.critical {
+    @apply bg-error-50 text-error-600 border border-error-200;
+  }
+
+  .issue-badge.warning {
+    @apply bg-warning-50 text-warning-600 border border-warning-200;
+  }
+
+  .issue-badge.info {
+    @apply bg-tax-50 text-tax-600 border border-tax-200;
+  }
+
+  .issue-badge.success {
+    @apply bg-success-50 text-success-600 border border-success-200;
+  }
+
+  .processing-spinner {
+    @apply animate-spin h-5 w-5 text-primary;
+  }
+
+  .status-indicator {
+    @apply flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium;
+  }
+
+  .status-indicator.processing {
+    @apply bg-tax-50 text-tax-600;
+  }
+
+  .status-indicator.completed {
+    @apply bg-success-50 text-success-600;
+  }
+
+  .status-indicator.error {
+    @apply bg-error-50 text-error-600;
+  }
+
+  .gradient-bg {
+    @apply bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10;
+  }
+
+  .glass-effect {
+    @apply bg-white/80 backdrop-blur-sm border border-white/20;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .animation-delay-600 {
+    animation-delay: 600ms;
+  }
+}
