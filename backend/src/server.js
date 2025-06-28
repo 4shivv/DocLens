@@ -8,7 +8,7 @@ require('dotenv').config();
 
 const logger = require('./utils/logger');
 const { initializeFirebase } = require('./config/firebase');
-const errorHandler = require('./middleware/errorHandler');
+const { errorHandler } = require('./middleware/errorHandler');
 const routes = require('./routes');
 
 const app = express();

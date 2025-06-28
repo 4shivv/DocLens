@@ -105,20 +105,18 @@ describe('DocumentService', () => {
 
   describe('updateProcessingStatus', () => {
     it('should update status with progress', async () => {
-      const mockDb = {
-        collection: jest.fn(() => ({
-          doc: jest.fn(() => ({
-            update: jest.fn().mockResolvedValue()
-          }))
-        }))
-      };
+      const mockUpdate = jest.fn().mockResolvedValue();
+      const mockDoc = jest.fn(() => ({ update: mockUpdate }));
+      const mockCollection = jest.fn(() => ({ doc: mockDoc }));
+      const mockDb = { collection: mockCollection };
 
       jest.spyOn(documentService, 'getDatabase').mockReturnValue(mockDb);
 
       await documentService.updateProcessingStatus('test-id', 'processing', 50);
 
-      const updateCall = mockDb.collection().doc().update;
-      expect(updateCall).toHaveBeenCalledWith({
+      expect(mockCollection).toHaveBeenCalledWith('documents');
+      expect(mockDoc).toHaveBeenCalledWith('test-id');
+      expect(mockUpdate).toHaveBeenCalledWith({
         processingStatus: 'processing',
         processingProgress: 50,
         updatedAt: expect.any(Date)
@@ -126,20 +124,18 @@ describe('DocumentService', () => {
     });
 
     it('should set completion timestamp when status is completed', async () => {
-      const mockDb = {
-        collection: jest.fn(() => ({
-          doc: jest.fn(() => ({
-            update: jest.fn().mockResolvedValue()
-          }))
-        }))
-      };
+      const mockUpdate = jest.fn().mockResolvedValue();
+      const mockDoc = jest.fn(() => ({ update: mockUpdate }));
+      const mockCollection = jest.fn(() => ({ doc: mockDoc }));
+      const mockDb = { collection: mockCollection };
 
       jest.spyOn(documentService, 'getDatabase').mockReturnValue(mockDb);
 
       await documentService.updateProcessingStatus('test-id', 'completed');
 
-      const updateCall = mockDb.collection().doc().update;
-      expect(updateCall).toHaveBeenCalledWith({
+      expect(mockCollection).toHaveBeenCalledWith('documents');
+      expect(mockDoc).toHaveBeenCalledWith('test-id');
+      expect(mockUpdate).toHaveBeenCalledWith({
         processingStatus: 'completed',
         processedAt: expect.any(Date),
         processingProgress: 100,
@@ -150,13 +146,10 @@ describe('DocumentService', () => {
 
   describe('storeAnalysisResults', () => {
     it('should store analysis results and mark as completed', async () => {
-      const mockDb = {
-        collection: jest.fn(() => ({
-          doc: jest.fn(() => ({
-            update: jest.fn().mockResolvedValue()
-          }))
-        }))
-      };
+      const mockUpdate = jest.fn().mockResolvedValue();
+      const mockDoc = jest.fn(() => ({ update: mockUpdate }));
+      const mockCollection = jest.fn(() => ({ doc: mockDoc }));
+      const mockDb = { collection: mockCollection };
 
       jest.spyOn(documentService, 'getDatabase').mockReturnValue(mockDb);
 
@@ -168,8 +161,9 @@ describe('DocumentService', () => {
 
       await documentService.storeAnalysisResults('test-id', analysisData);
 
-      const updateCall = mockDb.collection().doc().update;
-      expect(updateCall).toHaveBeenCalledWith({
+      expect(mockCollection).toHaveBeenCalledWith('documents');
+      expect(mockDoc).toHaveBeenCalledWith('test-id');
+      expect(mockUpdate).toHaveBeenCalledWith({
         aiAnalysis: analysisData,
         processingStatus: 'completed',
         processedAt: expect.any(Date),
@@ -181,26 +175,24 @@ describe('DocumentService', () => {
 
   describe('deleteDocument', () => {
     it('should delete document and return true when successful', async () => {
-      // Mock getDocument to return a document
       jest.spyOn(documentService, 'getDocument').mockResolvedValue({
         id: 'test-id',
         fileName: 'test.pdf'
       });
 
-      const mockDb = {
-        collection: jest.fn(() => ({
-          doc: jest.fn(() => ({
-            delete: jest.fn().mockResolvedValue()
-          }))
-        }))
-      };
+      const mockDelete = jest.fn().mockResolvedValue();
+      const mockDoc = jest.fn(() => ({ delete: mockDelete }));
+      const mockCollection = jest.fn(() => ({ doc: mockDoc }));
+      const mockDb = { collection: mockCollection };
 
       jest.spyOn(documentService, 'getDatabase').mockReturnValue(mockDb);
 
       const result = await documentService.deleteDocument('test-id');
 
       expect(result).toBe(true);
-      expect(mockDb.collection().doc().delete).toHaveBeenCalled();
+      expect(mockCollection).toHaveBeenCalledWith('documents');
+      expect(mockDoc).toHaveBeenCalledWith('test-id');
+      expect(mockDelete).toHaveBeenCalled();
     });
 
     it('should return false when document does not exist', async () => {

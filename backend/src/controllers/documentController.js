@@ -79,6 +79,11 @@ class DocumentController {
         throw new ApiError(404, 'Document not found');
       }
 
+      // If the document has a file, generate a signed URL for it
+      if (document.gsUrl) {
+        document.url = await documentService.getDocumentUrl(id);
+      }
+
       res.json({
         success: true,
         data: document

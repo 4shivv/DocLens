@@ -68,15 +68,10 @@ const uploadToStorage = async (filePath, destination, metadata = {}) => {
       }
     });
 
-    // Make file publicly readable (optional - adjust based on security needs)
-    await file.makePublic();
-
-    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${destination}`;
-    
     logger.info(`File uploaded to Firebase Storage: ${destination}`);
     return {
       file,
-      publicUrl,
+      publicUrl: null, // No public URL by default
       gsUrl: `gs://${bucket.name}/${destination}`
     };
   } catch (error) {

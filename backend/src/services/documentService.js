@@ -1,4 +1,4 @@
-const { getDB, uploadToStorage, deleteFromStorage } = require('../config/firebase');
+const { getDB, uploadToStorage, deleteFromStorage, getSignedUrl } = require('../config/firebase');
 const logger = require('../utils/logger');
 const { v4: uuidv4 } = require('uuid');
 
@@ -229,7 +229,6 @@ class DocumentService {
 
       // Update document with storage URL
       await this.updateDocument(documentId, {
-        storageUrl: uploadResult.publicUrl,
         gsUrl: uploadResult.gsUrl
       });
 
@@ -275,7 +274,7 @@ class DocumentService {
       }
 
       // Delete from cloud storage if exists
-      if (document.storageUrl) {
+      if (document.gsUrl) {
         const fileName = `documents/${documentId}/${document.fileName}`;
         try {
           await deleteFromStorage(fileName);
@@ -347,6 +346,26 @@ class DocumentService {
       return documents;
     } catch (error) {
       logger.error(`Error getting documents by status ${status}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get a signed URL for a document
+   */
+  async getDocumentUrl(documentId) {
+    try {
+      const document = await this.getDocument(documentId);
+      if (!document || !document.gsUrl) {
+        throw new Error('Document or file not found');
+      }
+      
+      // Extract file path from gsUrl
+      const filePath = document.gsUrl.substring(document.gsUrl.indexOf('/', 5) + 1);
+      
+      return await getSignedUrl(filePath);
+    } catch (error) {
+      logger.error(`Error getting signed URL for ${documentId}:`, error);
       throw error;
     }
   }

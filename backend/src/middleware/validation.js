@@ -1,5 +1,4 @@
 const { body, param, validationResult } = require('express-validator');
-const fileType = require('file-type');
 const logger = require('../utils/logger');
 const { ApiError } = require('../utils/errors');
 
@@ -39,7 +38,8 @@ const validateFileUpload = async (req, res, next) => {
     }
 
     // Validate file type using magic numbers (more secure than extension)
-    const detectedType = await fileType.fromFile(file.path);
+    const { fileTypeFromFile } = await import('file-type');
+    const detectedType = await fileTypeFromFile(file.path);
     const allowedMimeTypes = [
       'application/pdf',
       'image/jpeg',

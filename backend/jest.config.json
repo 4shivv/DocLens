@@ -23,5 +23,8 @@
     "/node_modules/",
     "/tests/",
     "/coverage/"
+  ],
+  "transformIgnorePatterns": [
+    "/node_modules/(?!file-type)/"
   ]
 }
