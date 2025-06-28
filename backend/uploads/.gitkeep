@@ -1,0 +1,28 @@
+# Uploads Directory
+
+This directory stores temporary uploaded files during processing.
+
+## Important Notes
+
+- Files are automatically cleaned up after processing
+- Do not store permanent files here
+- Ensure proper permissions for read/write access
+- Files are moved to Firebase Storage for permanent storage
+
+## Security
+
+- All files are validated before processing
+- File types are restricted to supported formats
+- Size limits are enforced
+- Files are scanned for security issues
+
+## Structure
+
+```
+uploads/
+├── temp-file-1.pdf
+├── temp-file-2.jpg
+└── .gitkeep
+```
+
+Files in this directory are temporary and will be deleted after processing completes.
