@@ -40,6 +40,13 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
+// Silence logger during tests
+jest.mock('../src/utils/logger', () => {
+  const actualLogger = jest.requireActual('../src/utils/logger');
+  actualLogger.transports.forEach(t => (t.silent = true));
+  return actualLogger;
+});
+
 // Global test utilities
 global.testUtils = {
   createMockDocument: () => ({

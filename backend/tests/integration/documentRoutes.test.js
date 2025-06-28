@@ -1,11 +1,28 @@
 const request = require('supertest');
 const path = require('path');
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
 
-// Import the app
 const app = require('../../src/server');
+const documentService = require('../../src/services/documentService');
+const ocrService = require('../../src/services/ocrService');
+
+let server;
 
 describe('Document API Endpoints', () => {
+  beforeAll((done) => {
+    server = app.listen(0, done); // Listen on a random, available port
+  });
+
+  afterAll(async () => {
+    await ocrService.terminate();
+    await new Promise(resolve => server.close(resolve));
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe('POST /api/documents/upload', () => {
     it('should upload a valid PDF file', async () => {
       // Create a mock PDF file for testing
@@ -29,7 +46,7 @@ describe('Document API Endpoints', () => {
     });
 
     it('should reject upload without file', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/documents/upload')
         .expect(400);
 
@@ -46,7 +63,7 @@ describe('Document API Endpoints', () => {
       }
       fs.writeFileSync(testFilePath, 'test content');
 
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/documents/upload')
         .attach('document', testFilePath)
         .expect(400);
@@ -66,17 +83,16 @@ describe('Document API Endpoints', () => {
 
   describe('GET /api/documents/:id', () => {
     it('should return document details for valid ID', async () => {
-      const mockDocumentId = 'test-document-id';
+      const mockDocumentId = uuidv4();
       
       // Mock the document service to return a document
-      const documentService = require('../../src/services/documentService');
       jest.spyOn(documentService, 'getDocument').mockResolvedValue({
         id: mockDocumentId,
         fileName: 'test.pdf',
         processingStatus: 'completed'
       });
 
-      const response = await request(app)
+      const response = await request(server)
         .get(`/api/documents/${mockDocumentId}`)
         .expect(200);
 
@@ -85,12 +101,11 @@ describe('Document API Endpoints', () => {
     });
 
     it('should return 404 for non-existent document', async () => {
-      const nonExistentId = 'non-existent-id';
+      const nonExistentId = uuidv4();
       
-      const documentService = require('../../src/services/documentService');
       jest.spyOn(documentService, 'getDocument').mockResolvedValue(null);
 
-      const response = await request(app)
+      const response = await request(server)
         .get(`/api/documents/${nonExistentId}`)
         .expect(404);
 
@@ -100,26 +115,25 @@ describe('Document API Endpoints', () => {
     it('should validate UUID format', async () => {
       const invalidId = 'invalid-uuid';
 
-      const response = await request(app)
+      const response = await request(server)
         .get(`/api/documents/${invalidId}`)
         .expect(400);
 
-      expect(response.body.error.message).toContain('valid UUID');
+      expect(response.body.error.errors[0].message).toContain('must be a valid UUID');
     });
   });
 
   describe('GET /api/documents/:id/status', () => {
     it('should return processing status', async () => {
-      const mockDocumentId = 'test-document-id';
+      const mockDocumentId = uuidv4();
       
-      const documentService = require('../../src/services/documentService');
       jest.spyOn(documentService, 'getProcessingStatus').mockResolvedValue({
         documentId: mockDocumentId,
         status: 'processing',
         progress: 50
       });
 
-      const response = await request(app)
+      const response = await request(server)
         .get(`/api/documents/${mockDocumentId}/status`)
         .expect(200);
 
@@ -130,9 +144,8 @@ describe('Document API Endpoints', () => {
 
   describe('GET /api/documents/:id/results', () => {
     it('should return analysis results for completed document', async () => {
-      const mockDocumentId = 'test-document-id';
+      const mockDocumentId = uuidv4();
       
-      const documentService = require('../../src/services/documentService');
       jest.spyOn(documentService, 'getDocument').mockResolvedValue({
         id: mockDocumentId,
         processingStatus: 'completed'
@@ -145,7 +158,7 @@ describe('Document API Endpoints', () => {
         riskLevel: 'low'
       });
 
-      const response = await request(app)
+      const response = await request(server)
         .get(`/api/documents/${mockDocumentId}/results`)
         .expect(200);
 
@@ -154,16 +167,15 @@ describe('Document API Endpoints', () => {
     });
 
     it('should return 202 for document still processing', async () => {
-      const mockDocumentId = 'test-document-id';
+      const mockDocumentId = uuidv4();
       
-      const documentService = require('../../src/services/documentService');
       jest.spyOn(documentService, 'getDocument').mockResolvedValue({
         id: mockDocumentId,
         processingStatus: 'processing',
         processingProgress: 75
       });
 
-      const response = await request(app)
+      const response = await request(server)
         .get(`/api/documents/${mockDocumentId}/results`)
         .expect(202);
 
@@ -174,12 +186,11 @@ describe('Document API Endpoints', () => {
 
   describe('DELETE /api/documents/:id', () => {
     it('should delete document successfully', async () => {
-      const mockDocumentId = 'test-document-id';
+      const mockDocumentId = uuidv4();
       
-      const documentService = require('../../src/services/documentService');
       jest.spyOn(documentService, 'deleteDocument').mockResolvedValue(true);
 
-      const response = await request(app)
+      const response = await request(server)
         .delete(`/api/documents/${mockDocumentId}`)
         .expect(200);
 
@@ -188,12 +199,11 @@ describe('Document API Endpoints', () => {
     });
 
     it('should return 404 when deleting non-existent document', async () => {
-      const mockDocumentId = 'test-document-id';
+      const mockDocumentId = uuidv4();
       
-      const documentService = require('../../src/services/documentService');
       jest.spyOn(documentService, 'deleteDocument').mockResolvedValue(false);
 
-      const response = await request(app)
+      const response = await request(server)
         .delete(`/api/documents/${mockDocumentId}`)
         .expect(404);
 
@@ -203,7 +213,7 @@ describe('Document API Endpoints', () => {
 
   describe('GET /api/documents/supported-formats', () => {
     it('should return supported file formats', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/documents/supported-formats')
         .expect(200);
 

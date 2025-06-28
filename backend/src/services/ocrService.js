@@ -15,8 +15,6 @@ class OCRService {
   async initializeWorker() {
     try {
       this.tesseractWorker = await Tesseract.createWorker();
-      await this.tesseractWorker.loadLanguage('eng');
-      await this.tesseractWorker.initialize('eng');
       logger.info('✅ Tesseract OCR worker initialized');
     } catch (error) {
       logger.error('❌ Failed to initialize Tesseract worker:', error);

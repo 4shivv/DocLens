@@ -73,11 +73,14 @@ app.use('*', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  logger.info(`🚀 DocuLens backend server running on port ${PORT}`);
-  logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  logger.info(`🔥 Firebase project: ${process.env.FIREBASE_PROJECT_ID}`);
-});
+// Start server only when this file is run directly
+if (require.main === module) {
+  app.listen(PORT, () => {
+    logger.info(`🚀 DocuLens backend server running on port ${PORT}`);
+    logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+    logger.info(`🔥 Firebase project: ${process.env.FIREBASE_PROJECT_ID}`);
+  });
+}
 
 // Graceful shutdown
 process.on('SIGTERM', () => {

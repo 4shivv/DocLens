@@ -27,16 +27,6 @@ const upload = multer({
     fileSize: parseInt(process.env.MAX_FILE_SIZE) || 52428800, // 50MB
     files: 1
   },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = (process.env.ALLOWED_FILE_TYPES || 'pdf,jpg,jpeg,png').split(',');
-    const fileExt = path.extname(file.originalname).toLowerCase().slice(1);
-    
-    if (allowedTypes.includes(fileExt)) {
-      cb(null, true);
-    } else {
-      cb(new Error(`File type .${fileExt} not allowed. Allowed types: ${allowedTypes.join(', ')}`));
-    }
-  }
 });
 
 /**
@@ -63,11 +53,25 @@ const upload = multer({
  *       429:
  *         description: Rate limit exceeded
  */
-router.post('/upload', 
+router.post('/upload',
   uploadRateLimit,
   upload.single('document'),
   validateFileUpload,
   documentController.uploadDocument
+);
+
+/**
+ * @swagger
+ * /api/documents/supported-formats:
+ *   get:
+ *     summary: Get list of supported file formats
+ *     tags: [Documents]
+ *     responses:
+ *       200:
+ *         description: Supported formats list
+ */
+router.get('/supported-formats',
+  documentController.getSupportedFormats
 );
 
 /**
@@ -235,8 +239,5 @@ router.delete('/:id',
  *       200:
  *         description: Supported formats list
  */
-router.get('/supported-formats',
-  documentController.getSupportedFormats
-);
 
 module.exports = router;

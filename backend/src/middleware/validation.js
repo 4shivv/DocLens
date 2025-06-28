@@ -15,7 +15,13 @@ const handleValidationErrors = (req, res, next) => {
     }));
     
     logger.warn('Validation failed:', errorMessages);
-    throw new ApiError(400, 'Validation failed', { errors: errorMessages });
+    return res.status(400).json({
+      success: false,
+      error: {
+        message: 'Validation failed',
+        errors: errorMessages
+      }
+    });
   }
   next();
 };
