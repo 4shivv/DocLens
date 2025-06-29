@@ -27,7 +27,7 @@ export default function AnalysisPage() {
   const [activeTab, setActiveTab] = useState<'summary' | 'issues' | 'document'>('summary');
   const { toast } = useToast();
 
-  const { analysis, isLoading, error, refetch } = useDocumentAnalysis(documentId);
+  const { analysis, isLoading, error, refetch } = useDocumentAnalysis(documentId, true);
 
   useEffect(() => {
     if (!documentId) {

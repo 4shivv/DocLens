@@ -40,7 +40,7 @@ export default function DocumentViewer({
   issues = [],
   onIssueClick 
 }: DocumentViewerProps) {
-  console.log('[DocuLens] DocumentViewer Props:', { documentId, documentUrl, issues });
+  // console.log('[DocuLens] DocumentViewer issues:', issues);
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
   const [showAnnotations, setShowAnnotations] = useState(true);
@@ -208,10 +208,10 @@ export default function DocumentViewer({
                     getSeverityColor(issue.severity)
                   } ${selectedIssue === issue.id ? 'opacity-100' : 'opacity-70'}`}
                   style={{
-                    left: issue.coordinates?.x || Math.random() * 400 + 100,
-                    top: issue.coordinates?.y || Math.random() * 200 + 300,
-                    width: issue.coordinates?.width || 120,
-                    height: issue.coordinates?.height || 40,
+                    left: issue.coordinates?.x || 0,
+                    top: issue.coordinates?.y || 0,
+                    width: issue.coordinates?.width || 0,
+                    height: issue.coordinates?.height || 0,
                   }}
                   onClick={() => handleIssueClick(issue)}
                   title={issue.message}

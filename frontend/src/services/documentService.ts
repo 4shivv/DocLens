@@ -91,7 +91,6 @@ export const uploadDocument = async (file: File): Promise<DocumentUploadResponse
 // Get document status
 export const getDocumentStatus = async (documentId: string): Promise<DocumentStatus> => {
   const response = await api.get(`/documents/${documentId}/status`);
-  console.log('[DocuLens] Raw status response:', response.data);
   
   // The backend returns { success: true, data: {...} }
   const statusData = response.data.data;
@@ -134,50 +133,35 @@ export const deleteDocument = async (documentId: string): Promise<void> => {
 };
 
 // Poll document status until completion
-export const pollDocumentStatus = async (
+export const pollDocumentStatus = (
   documentId: string,
-  onUpdate?: (status: DocumentStatus) => void,
-  maxAttempts: number = 60, // 5 minutes with 5-second intervals
-  interval: number = 5000
+  onUpdate: (status: DocumentStatus) => void,
+  maxAttempts: number = 60,
+  interval: number = 2000
 ): Promise<DocumentStatus> => {
-  let attempts = 0;
-  
   return new Promise((resolve, reject) => {
+    let attempts = 0;
+
     const poll = async () => {
+      if (attempts >= maxAttempts) {
+        return reject(new Error("Polling timeout reached."));
+      }
+      attempts++;
+
       try {
-        attempts++;
-        console.log(`[DocuLens] Polling attempt ${attempts} for document ${documentId}`);
-        
         const status = await getDocumentStatus(documentId);
-        console.log('[DocuLens] Polling status response:', status);
-        
-        if (onUpdate) {
-          onUpdate(status);
-        }
-        
-        // Check if processing is complete
+        onUpdate(status);
+
         if (status.status === 'completed' || status.status === 'error') {
-          console.log(`[DocuLens] Processing complete with status: ${status.status}`);
-          resolve(status);
-          return;
+          return resolve(status);
         }
-        
-        // Check if we've exceeded max attempts
-        if (attempts >= maxAttempts) {
-          console.error('[DocuLens] Polling timeout reached');
-          reject(new Error('Document processing timeout'));
-          return;
-        }
-        
-        // Continue polling
-        console.log(`[DocuLens] Status is ${status.status}, continuing to poll...`);
+
         setTimeout(poll, interval);
       } catch (error) {
-        console.error('[DocuLens] Polling error:', error);
-        reject(error);
+        return reject(error);
       }
     };
-    
+
     poll();
   });
 };

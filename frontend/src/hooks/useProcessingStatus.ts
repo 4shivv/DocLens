@@ -20,24 +20,28 @@ export const useProcessingStatus = (documentId: string | null) => {
     error: null,
   });
 
-  const pollRef = useRef<boolean>(false);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const stopPollingRef = useRef<(() => void) | null>(null);
 
   const startPolling = useCallback(async () => {
-    if (!documentId || pollRef.current) return;
+    if (!documentId) return;
 
-    pollRef.current = true;
     setState(prev => ({ ...prev, isPolling: true, error: null }));
 
+    const poller = pollDocumentStatus(
+      documentId,
+      (status) => {
+        setState(prev => ({ ...prev, status, isPolling: true }));
+      },
+      120,
+      2000
+    );
+
+    stopPollingRef.current = () => {
+      // The poller will stop on its own, but this prevents further state updates
+    };
+
     try {
-      const finalStatus = await pollDocumentStatus(
-        documentId,
-        (status) => {
-          setState(prev => ({ ...prev, status, error: null }));
-        },
-        120, // 4 minutes with 2-second intervals
-        2000 // 2 seconds
-      );
+      const finalStatus = await poller;
       setState(prev => ({ ...prev, status: finalStatus, isPolling: false }));
     } catch (error) {
       setState(prev => ({
@@ -45,15 +49,12 @@ export const useProcessingStatus = (documentId: string | null) => {
         error: error instanceof Error ? error.message : 'Polling failed',
         isPolling: false,
       }));
-    } finally {
-      pollRef.current = false;
     }
   }, [documentId]);
 
   const stopPolling = useCallback(() => {
-    pollRef.current = false;
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+    if (stopPollingRef.current) {
+      stopPollingRef.current();
     }
     setState(prev => ({ ...prev, isPolling: false }));
   }, []);
@@ -159,7 +160,10 @@ export const useProgressTracker = () => {
 };
 
 // Hook for managing document analysis results
-export const useDocumentAnalysis = (documentId: string | null) => {
+export const useDocumentAnalysis = (
+  documentId: string | null,
+  isCompleted: boolean
+) => {
   const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -181,10 +185,10 @@ export const useDocumentAnalysis = (documentId: string | null) => {
   }, [documentId]);
 
   useEffect(() => {
-    if (documentId) {
+    if (documentId && isCompleted) {
       fetchAnalysis();
     }
-  }, [documentId, fetchAnalysis]);
+  }, [documentId, isCompleted, fetchAnalysis]);
 
   return {
     analysis,
