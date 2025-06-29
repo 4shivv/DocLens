@@ -1,10 +1,11 @@
 import { useEffect } from "react";
-import { 
-  CheckCircle, 
-  AlertCircle, 
-  Clock, 
-  FileText, 
-  Brain, 
+import { useNavigate } from "react-router-dom";
+import {
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  FileText,
+  Brain,
   Search,
   Loader2
 } from "lucide-react";
@@ -56,15 +57,17 @@ export default function ProcessingStatus({
   onComplete, 
   onError 
 }: ProcessingStatusProps) {
+  const navigate = useNavigate();
   const { status, isPolling, error, isCompleted, isError } = useProcessingStatus(documentId);
 
   useEffect(() => {
     if (isCompleted) {
       onComplete();
+      navigate(`/analysis?documentId=${documentId}`);
     } else if (isError && error) {
       onError(error);
     }
-  }, [isCompleted, isError, error, onComplete, onError]);
+  }, [isCompleted, isError, error, onComplete, onError, navigate, documentId]);
 
   const stages = [
     { key: "uploaded", label: "Upload Complete" },

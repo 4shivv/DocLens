@@ -232,13 +232,15 @@ class ProcessingService {
     try {
       // Ensure required fields exist
       const processedResults = {
-        formType: results.formType || 'unknown',
-        confidence: results.confidence || 0.5,
-        extractedFields: results.extractedFields || {},
-        detectedIssues: Array.isArray(results.detectedIssues) ? results.detectedIssues : [],
-        simplifiedSummary: results.simplifiedSummary || 'Analysis completed',
-        completenessScore: results.completenessScore || 0.5,
-        riskLevel: results.riskLevel || 'medium',
+        summary: {
+          formType: results.summary?.formType || 'unknown',
+          confidence: results.summary?.confidence || 0.5,
+          completeness: results.summary?.completeness || 0.5,
+          riskLevel: results.summary?.riskLevel || 'medium',
+        },
+        issues: Array.isArray(results.issues) ? results.issues : [],
+        fields: Array.isArray(results.fields) ? results.fields : [],
+        recommendations: Array.isArray(results.recommendations) ? results.recommendations : [],
         processingMethod: 'gemini_ai',
         processedAt: new Date().toISOString()
       };
@@ -252,23 +254,26 @@ class ProcessingService {
       };
 
       // Validate and clean detected issues
-      processedResults.detectedIssues = processedResults.detectedIssues.map(issue => ({
+      processedResults.issues = processedResults.issues.map((issue, index) => ({
+        id: issue.id || `issue-${index}`,
         type: issue.type || 'unknown',
-        severity: issue.severity || 'medium',
+        severity: issue.severity || 'warning',
         field: issue.field || 'general',
-        description: issue.description || 'Issue detected',
+        message: issue.message || 'Issue detected',
         suggestion: issue.suggestion || 'Manual review recommended',
         coordinates: issue.coordinates || null
       }));
 
       // Calculate overall risk assessment
-      const highSeverityIssues = processedResults.detectedIssues.filter(i => i.severity === 'high').length;
-      const mediumSeverityIssues = processedResults.detectedIssues.filter(i => i.severity === 'medium').length;
+      const criticalIssues = processedResults.issues.filter(i => i.severity === 'critical').length;
+      const warningIssues = processedResults.issues.filter(i => i.severity === 'warning').length;
 
-      if (highSeverityIssues > 0) {
-        processedResults.riskLevel = 'high';
-      } else if (mediumSeverityIssues > 2) {
-        processedResults.riskLevel = 'medium';
+      if (criticalIssues > 0) {
+        processedResults.summary.riskLevel = 'high';
+      } else if (warningIssues > 2) {
+        processedResults.summary.riskLevel = 'medium';
+      } else {
+        processedResults.summary.riskLevel = 'low';
       }
 
       return processedResults;

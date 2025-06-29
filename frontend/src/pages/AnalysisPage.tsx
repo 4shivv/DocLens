@@ -16,7 +16,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useDocumentAnalysis } from "@/hooks/useProcessingStatus";
+import { DocumentAnalysis } from "@/services/documentService";
 import { useToast } from "@/hooks/useToast";
+
+type Issue = DocumentAnalysis['results']['issues'][0];
 
 export default function AnalysisPage() {
   const [searchParams] = useSearchParams();
@@ -54,7 +57,7 @@ export default function AnalysisPage() {
     }
   };
 
-  const handleIssueClick = (issue: any) => {
+  const handleIssueClick = (issue: Issue) => {
     setActiveTab('document');
     // Scroll to issue in document viewer
   };
@@ -130,16 +133,16 @@ export default function AnalysisPage() {
 
   if (!analysis) return null;
 
-  const mockSummary = {
-    formType: analysis.summary.formType,
-    confidence: analysis.summary.confidence,
-    completeness: analysis.summary.completeness,
-    riskLevel: analysis.summary.riskLevel,
-    totalIssues: analysis.issues.length,
-    criticalIssues: analysis.issues.filter(i => i.severity === 'critical').length,
-    warningIssues: analysis.issues.filter(i => i.severity === 'warning').length,
-    extractedFields: analysis.fields.filter(f => f.extracted).length,
-    totalFields: analysis.fields.length,
+  const summaryData = {
+    formType: analysis.results.summary.formType,
+    confidence: analysis.results.summary.confidence,
+    completeness: analysis.results.summary.completeness,
+    riskLevel: analysis.results.summary.riskLevel,
+    totalIssues: analysis.results.issues.length,
+    criticalIssues: analysis.results.issues.filter(i => i.severity === 'critical').length,
+    warningIssues: analysis.results.issues.filter(i => i.severity === 'warning').length,
+    extractedFields: analysis.results.fields.filter(f => f.extracted).length,
+    totalFields: analysis.results.fields.length,
   };
 
   return (
@@ -182,7 +185,7 @@ export default function AnalysisPage() {
             <nav className="flex space-x-8">
               {[
                 { id: 'summary', label: 'Summary', badge: null },
-                { id: 'issues', label: 'Issues', badge: analysis.issues.length },
+                { id: 'issues', label: 'Issues', badge: analysis.results.issues.length },
                 { id: 'document', label: 'Document View', badge: null }
               ].map((tab) => (
                 <button
@@ -210,15 +213,15 @@ export default function AnalysisPage() {
         <div className="space-y-8">
           {activeTab === 'summary' && (
             <ResultsSummary
-              summary={mockSummary}
+              summary={summaryData}
               documentId={documentId}
-              processedAt={new Date().toISOString()}
+              processedAt={analysis.processedAt}
             />
           )}
 
           {activeTab === 'issues' && (
             <IssuesList
-              issues={analysis.issues}
+              issues={analysis.results.issues}
               onIssueClick={handleIssueClick}
               onViewInDocument={handleViewInDocument}
             />
@@ -227,7 +230,7 @@ export default function AnalysisPage() {
           {activeTab === 'document' && (
             <DocumentViewer
               documentId={documentId}
-              issues={analysis.issues}
+              issues={analysis.results.issues}
               onIssueClick={handleIssueClick}
             />
           )}
@@ -237,7 +240,7 @@ export default function AnalysisPage() {
         <div className="mt-12 border-t pt-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-muted-foreground">
-              Analysis completed on {new Date().toLocaleDateString('en-US', {
+              Analysis completed on {new Date(analysis.processedAt).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',

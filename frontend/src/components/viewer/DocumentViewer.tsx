@@ -40,6 +40,7 @@ export default function DocumentViewer({
   issues = [],
   onIssueClick 
 }: DocumentViewerProps) {
+  console.log('[DocuLens] DocumentViewer Props:', { documentId, documentUrl, issues });
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
   const [showAnnotations, setShowAnnotations] = useState(true);

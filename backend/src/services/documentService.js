@@ -130,11 +130,30 @@ class DocumentService {
         return null;
       }
 
+      // Map processing status to stage for frontend compatibility
+      const stageMap = {
+        'pending': 'uploaded',
+        'processing': 'analyzing',
+        'completed': 'completed',
+        'error': 'error'
+      };
+
+      // Generate appropriate message based on status
+      const messageMap = {
+        'pending': 'Document uploaded, waiting to process',
+        'processing': 'Analyzing your document with AI',
+        'completed': 'Analysis complete',
+        'error': document.processingError || 'Processing failed'
+      };
+
       return {
         documentId,
         status: document.processingStatus,
         progress: document.processingProgress || 0,
+        stage: stageMap[document.processingStatus] || document.processingStatus,
+        message: messageMap[document.processingStatus] || 'Processing document',
         error: document.processingError || null,
+        createdAt: document.createdAt,
         updatedAt: document.updatedAt,
         processedAt: document.processedAt || null
       };
@@ -150,7 +169,7 @@ class DocumentService {
   async storeAnalysisResults(documentId, analysisData) {
     try {
       const updates = {
-        aiAnalysis: analysisData,
+        results: analysisData, // Store under 'results' key
         processingStatus: 'completed',
         processedAt: new Date(),
         processingProgress: 100
@@ -199,16 +218,9 @@ class DocumentService {
 
       return {
         documentId,
-        fileName: document.fileName,
+        status: document.processingStatus,
         processedAt: document.processedAt,
-        ocrResults: document.ocrResults || null,
-        aiAnalysis: document.aiAnalysis || null,
-        formType: document.aiAnalysis?.formType || 'unknown',
-        extractedFields: document.aiAnalysis?.extractedFields || {},
-        detectedIssues: document.aiAnalysis?.detectedIssues || [],
-        simplifiedSummary: document.aiAnalysis?.simplifiedSummary || '',
-        completenessScore: document.aiAnalysis?.completenessScore || 0,
-        riskLevel: document.aiAnalysis?.riskLevel || 'unknown'
+        results: document.results || null, // Return the 'results' object
       };
     } catch (error) {
       logger.error(`Error getting analysis results for ${documentId}:`, error);

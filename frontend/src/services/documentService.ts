@@ -1,9 +1,15 @@
 import api from './api';
 
 export interface DocumentUploadResponse {
-  documentId: string;
-  status: 'uploaded' | 'processing' | 'completed' | 'error';
+  success: boolean;
   message: string;
+  data: {
+    documentId: string;
+    status: 'uploaded' | 'processing' | 'completed' | 'error';
+    estimatedProcessingTime?: string;
+    fileName?: string;
+    fileSize?: number;
+  };
 }
 
 export interface DocumentStatus {
@@ -85,7 +91,21 @@ export const uploadDocument = async (file: File): Promise<DocumentUploadResponse
 // Get document status
 export const getDocumentStatus = async (documentId: string): Promise<DocumentStatus> => {
   const response = await api.get(`/documents/${documentId}/status`);
-  return response.data.data;
+  console.log('[DocuLens] Raw status response:', response.data);
+  
+  // The backend returns { success: true, data: {...} }
+  const statusData = response.data.data;
+  
+  // Ensure the data has the expected structure
+  return {
+    documentId: statusData.documentId,
+    status: statusData.status,
+    progress: statusData.progress || 0,
+    stage: statusData.stage || statusData.status,
+    message: statusData.message || '',
+    createdAt: statusData.createdAt || new Date().toISOString(),
+    updatedAt: statusData.updatedAt || new Date().toISOString()
+  };
 };
 
 // Get document details
@@ -126,7 +146,10 @@ export const pollDocumentStatus = async (
     const poll = async () => {
       try {
         attempts++;
+        console.log(`[DocuLens] Polling attempt ${attempts} for document ${documentId}`);
+        
         const status = await getDocumentStatus(documentId);
+        console.log('[DocuLens] Polling status response:', status);
         
         if (onUpdate) {
           onUpdate(status);
@@ -134,19 +157,23 @@ export const pollDocumentStatus = async (
         
         // Check if processing is complete
         if (status.status === 'completed' || status.status === 'error') {
+          console.log(`[DocuLens] Processing complete with status: ${status.status}`);
           resolve(status);
           return;
         }
         
         // Check if we've exceeded max attempts
         if (attempts >= maxAttempts) {
+          console.error('[DocuLens] Polling timeout reached');
           reject(new Error('Document processing timeout'));
           return;
         }
         
         // Continue polling
+        console.log(`[DocuLens] Status is ${status.status}, continuing to poll...`);
         setTimeout(poll, interval);
       } catch (error) {
+        console.error('[DocuLens] Polling error:', error);
         reject(error);
       }
     };

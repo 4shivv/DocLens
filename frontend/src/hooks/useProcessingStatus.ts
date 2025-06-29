@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { 
-  getDocumentStatus, 
-  pollDocumentStatus, 
-  DocumentStatus 
+import {
+  getDocumentStatus,
+  pollDocumentStatus,
+  getDocumentAnalysis,
+  DocumentStatus,
+  DocumentAnalysis,
 } from '@/services/documentService';
 
 interface ProcessingState {
@@ -28,14 +30,15 @@ export const useProcessingStatus = (documentId: string | null) => {
     setState(prev => ({ ...prev, isPolling: true, error: null }));
 
     try {
-      await pollDocumentStatus(
+      const finalStatus = await pollDocumentStatus(
         documentId,
         (status) => {
           setState(prev => ({ ...prev, status, error: null }));
         },
-        60, // 5 minutes
-        3000 // 3 seconds
+        120, // 4 minutes with 2-second intervals
+        2000 // 2 seconds
       );
+      setState(prev => ({ ...prev, status: finalStatus, isPolling: false }));
     } catch (error) {
       setState(prev => ({
         ...prev,
@@ -44,7 +47,6 @@ export const useProcessingStatus = (documentId: string | null) => {
       }));
     } finally {
       pollRef.current = false;
-      setState(prev => ({ ...prev, isPolling: false }));
     }
   }, [documentId]);
 
@@ -158,7 +160,7 @@ export const useProgressTracker = () => {
 
 // Hook for managing document analysis results
 export const useDocumentAnalysis = (documentId: string | null) => {
-  const [analysis, setAnalysis] = useState(null);
+  const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -169,40 +171,8 @@ export const useDocumentAnalysis = (documentId: string | null) => {
     setError(null);
 
     try {
-      // This would call the actual analysis endpoint
-      // For now, we'll simulate it
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock analysis data
-      const mockAnalysis = {
-        documentId,
-        summary: {
-          formType: 'W-2',
-          confidence: 95,
-          completeness: 87,
-          riskLevel: 'low' as const,
-        },
-        issues: [
-          {
-            id: '1',
-            type: 'missing' as const,
-            severity: 'warning' as const,
-            field: 'Box 12',
-            message: 'Box 12 (codes) appears to be blank',
-            suggestion: 'Verify if employer contributions should be reported',
-          }
-        ],
-        fields: [
-          { name: 'Employee Name', value: 'John Doe', confidence: 98, extracted: true },
-          { name: 'Wages', value: 75000, confidence: 99, extracted: true },
-        ],
-        recommendations: [
-          'Review Box 12 for any missing employer contribution codes',
-          'Verify all wage amounts match your records',
-        ],
-      };
-      
-      setAnalysis(mockAnalysis);
+      const analysisResult = await getDocumentAnalysis(documentId);
+      setAnalysis(analysisResult);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch analysis');
     } finally {

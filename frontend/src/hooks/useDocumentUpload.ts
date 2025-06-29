@@ -16,7 +16,7 @@ export const useDocumentUpload = () => {
     result: null,
   });
 
-  const upload = useCallback(async (file: File): Promise<DocumentUploadResponse | null> => {
+  const upload = useCallback(async (file: File): Promise<DocumentUploadResponse['data'] | null> => {
     // Validate file first
     const validation = validateFile(file);
     if (!validation.isValid) {
@@ -54,7 +54,7 @@ export const useDocumentUpload = () => {
         result,
       });
       
-      return result;
+      return result.data;
     } catch (error) {
       setUploadState({
         isUploading: false,
