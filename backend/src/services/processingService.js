@@ -87,8 +87,6 @@ class ProcessingService {
         await documentService.storeAnalysisResults(documentId, analysisResults);
       }
 
-      await documentService.updateProcessingStatus(documentId, 'processing', 90);
-
       // Step 6: Cleanup temporary files
       await this.cleanupTempFiles(filePath);
 

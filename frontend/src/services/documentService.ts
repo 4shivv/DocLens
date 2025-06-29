@@ -85,19 +85,19 @@ export const uploadDocument = async (file: File): Promise<DocumentUploadResponse
 // Get document status
 export const getDocumentStatus = async (documentId: string): Promise<DocumentStatus> => {
   const response = await api.get(`/documents/${documentId}/status`);
-  return response.data;
+  return response.data.data;
 };
 
 // Get document details
 export const getDocument = async (documentId: string): Promise<DocumentInfo> => {
   const response = await api.get(`/documents/${documentId}`);
-  return response.data;
+  return response.data.data;
 };
 
 // Get document analysis results
 export const getDocumentAnalysis = async (documentId: string): Promise<DocumentAnalysis> => {
   const response = await api.get(`/documents/${documentId}/results`);
-  return response.data;
+  return response.data.data;
 };
 
 // Download formatted report
